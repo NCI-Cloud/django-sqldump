@@ -4,6 +4,7 @@ from django.db import connections
 import json
 from lxml import etree
 from django.conf import settings
+from .settings import *
 
 class Query(object):
     def __init__(self, sql, root='list', row='object'):
@@ -16,7 +17,7 @@ class Query(object):
 
     def get(self):
         """Return [{col1:val1, col2:val2, ...} ...]."""
-        cursor = connections['stats'].cursor() # TODO fix this hard-coded string everywhere
+        cursor = connections[DB_CON].cursor()
         cursor.execute(self.sql)
         self.cols = [col[0] for col in cursor.description]
         return [{col:val for (col, val) in zip(self.cols, row)} for row in cursor.fetchall()]
@@ -64,16 +65,6 @@ class Query(object):
         else:
             raise ValueError('unknown format "{0}"'.format(f))
 
-# TODO this should be in a config file somewhere
-# keys must match \w+ (because of specification in urls.py)
-QUERIES = {
-    'hallo' : Query(
-        sql  = "SELECT * FROM hosts LIMIT 10",
-        root = 'hosts',
-        row  = 'host',
-    ),
-}
-
 def query(request, query_key):
     if query_key not in QUERIES:
         raise Http404('unknown query key')
@@ -81,7 +72,7 @@ def query(request, query_key):
     f = request.GET.get('format', default='xml') # TODO maybe should come from http header
 
     ct = {'json' : 'application/json', 'xml' : 'application/xml'} # TODO clean up
-    return HttpResponse(QUERIES[query_key].get_as(f), content_type=ct[f])
+    return HttpResponse(Query(**QUERIES[query_key]).get_as(f), content_type=ct[f])
 
 def index(request):
     return HttpResponse('have some options') # TODO implement
