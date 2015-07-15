@@ -5,13 +5,16 @@ from django.shortcuts import get_object_or_404
 from lxml import etree
 from .models import Query
 
-def get_xml(query):
-    """Return xml-formatted string representing query result."""
+def get_etree(query):
     rows = query.get()
-
     root = etree.Element(query.root)
     for row in rows:
         root.append(etree.Element(query.row, **{k:str(row[k]) for k in row}))
+    return root
+
+def get_xml(query):
+    """Return xml-formatted string representing query result."""
+    root = get_etree(query)
 
     # can get actual field types by inspecting cursor.description,
     # but these (I think) depend on the database back-end
@@ -41,7 +44,7 @@ def get_xml(query):
 
 def get_json(query):
     """Return json-formatted string representing query result."""
-    rows = query.get()
+    rows = [dict(row.attrib) for row in get_etree(query)]
     return json.dumps(rows, indent=2)
 
 def query(request, query_key):

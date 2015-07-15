@@ -73,6 +73,29 @@ class ValidationTests(TestCase):
         citizen = citizen or cls.get_citizen()
         citizen.save(using=TEST_DB_CON)
 
+    def compare_citizens(self, received, expected):
+        """
+        Check if all the fields of the given Citizen objects match.
+        __eq__ is defined just to compare primary keys, which is insufficient here.
+
+        """
+        fields = [field.name for field in self.Citizen._meta.get_fields()]
+
+        # make sure all the fields have the same type before comparison
+        received.clean_fields()
+        expected.clean_fields()
+
+        for field in fields:
+            self.assertEqual(
+                getattr(received, field),
+                getattr(expected, field),
+                'received "{r}" instead of "{o}" for field "{f}"'.format(
+                    r = getattr(received, field),
+                    o = getattr(expected, field),
+                    f = field,
+                ),
+            )
+
     def tearDown(self):
         """Kill every citizen, so each test method starts with no citizens."""
         self.Citizen.objects.all().delete()
@@ -85,36 +108,27 @@ class ValidationTests(TestCase):
         root = etree.fromstring(get_xml(self.citizen_query))
         self.assertEqual(len(root), 0, msg='got nonempty xml result from empty table')
 
-    def test_xml_nonempty(self):
-        fields = [field.name for field in self.Citizen._meta.get_fields()]
-
+    def test_json_nonempty(self):
         # test with one bland citizen and one spicy citizen
         original_citizens = [self.get_citizen(), self.get_bobby()]
         for c in original_citizens:
             self.insert_citizen(c)
-        retrieved_citizens = etree.fromstring(get_xml(self.citizen_query))
+        rows = json.loads(get_json(self.citizen_query))
+        retrieved_citizens = [self.Citizen(**att) for att in rows]
 
         # N.B. this relies on the rows being retrieved in the order they were created
-        for (original, retrieved) in zip(original_citizens, retrieved_citizens):
-            # create Citizen object from retrieved data
-            attributes = {k:retrieved.attrib[k] for k in retrieved.attrib}
-            citizen = self.Citizen(**attributes)
+        for (retrieved, original) in zip(retrieved_citizens, original_citizens):
+            self.compare_citizens(retrieved, original)
 
-            # make sure all the fields have the same type before comparison
-            citizen.clean_fields()
-            original.clean_fields()
-
-            # __eq__ is defined just to compare primary keys, which is insufficient here
-            for field in fields:
-                self.assertEqual(
-                    getattr(citizen,  field),
-                    getattr(original, field),
-                    'retrieved "{r}" instead of "{o}" for field "{f}"'.format(
-                        r = getattr(citizen,  field),
-                        o = getattr(original, field),
-                        f = field,
-                    ),
-                )
+    def test_xml_nonempty(self):
+        # see comments in test_json_nonempty
+        original_citizens = [self.get_citizen(), self.get_bobby()]
+        for c in original_citizens:
+            self.insert_citizen(c)
+        root = etree.fromstring(get_xml(self.citizen_query))
+        retrieved_citizens = [self.Citizen(**row.attrib) for row in root]
+        for (retrieved, original) in zip(retrieved_citizens, original_citizens):
+            self.compare_citizens(retrieved, original)
 
     def test_xml_rootrow(self):
         self.insert_citizen()
