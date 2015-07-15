@@ -26,17 +26,17 @@ class ValidationTests(TestCase):
             last_name  = models.CharField(max_length=64)
             dob        = models.DateField()
             iq         = models.IntegerField()
-        ValidationTests.Citizen = Citizen
+        cls.Citizen = Citizen
 
         # create table
         with connections[TEST_DB_CON].schema_editor() as schema_editor:
-            schema_editor.create_model(ValidationTests.Citizen)
+            schema_editor.create_model(cls.Citizen)
 
         # make sure testing queries will go to testing db
         Query.set_db_con(TEST_DB_CON)
 
         # this query gets used enough to make it worth saving here...
-        ValidationTests.citizen_query = Query(
+        cls.citizen_query = Query(
             key  = 'citizens',
             sql  = 'SELECT * FROM dump_citizen',
             root = 'citizens',
@@ -47,14 +47,32 @@ class ValidationTests(TestCase):
     def tearDownClass(cls):
         """Remove model tables (even though this would happen automatically anyway)."""
         with connections[TEST_DB_CON].schema_editor() as schema_editor:
-            schema_editor.delete_model(ValidationTests.Citizen)
+            schema_editor.delete_model(cls.Citizen)
         super().tearDownClass()
 
-    def test_empty_json(self):
+    @classmethod
+    def insert_citizen(cls):
+        cls.Citizen(
+            first_name = 'First',
+            last_name  = 'Last',
+            dob        = '1955-11-05',
+            iq         = 100,
+        ).save(using=TEST_DB_CON)
+
+    def tearDown(self):
+        """Kill every citizen, so each test method starts with no citizens."""
+        self.Citizen.objects.all().delete()
+
+    def test_json_empty(self):
         citizens = json.loads(get_json(self.citizen_query))
         self.assertEqual(citizens, [], msg='got nonempty json result from empty table')
 
-    def test_empty_xml(self):
-        xml = get_xml(self.citizen_query)
-        root = etree.fromstring(xml)
+    def test_xml_empty(self):
+        root = etree.fromstring(get_xml(self.citizen_query))
         self.assertEqual(len(root), 0, msg='got nonempty xml result from empty table')
+
+    def test_xml_rootrow(self):
+        self.insert_citizen()
+        root = etree.fromstring(get_xml(self.citizen_query))
+        self.assertEqual(root.tag, self.citizen_query.root, msg='got different root tag name')
+        self.assertEqual(root[0].tag, self.citizen_query.row, msg='got different row tag name')
