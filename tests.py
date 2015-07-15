@@ -51,13 +51,27 @@ class ValidationTests(TestCase):
         super().tearDownClass()
 
     @classmethod
-    def insert_citizen(cls):
-        cls.Citizen(
+    def get_citizen(cls):
+        return cls.Citizen(
             first_name = 'First',
             last_name  = 'Last',
             dob        = '1955-11-05',
             iq         = 100,
-        ).save(using=TEST_DB_CON)
+        )
+
+    @classmethod
+    def get_bobby(cls):
+        return cls.Citizen(
+            first_name = "Robert'); DROP TABLE Studeñts;--",
+            last_name  = '<3',
+            dob        = '1984-10-17',
+            iq         = 0,
+        )
+
+    @classmethod
+    def insert_citizen(cls, citizen=None):
+        citizen = citizen or cls.get_citizen()
+        citizen.save(using=TEST_DB_CON)
 
     def tearDown(self):
         """Kill every citizen, so each test method starts with no citizens."""
@@ -76,3 +90,11 @@ class ValidationTests(TestCase):
         root = etree.fromstring(get_xml(self.citizen_query))
         self.assertEqual(root.tag, self.citizen_query.root, msg='got different root tag name')
         self.assertEqual(root[0].tag, self.citizen_query.row, msg='got different row tag name')
+
+    def test_xml_valid(self):
+        for _ in range(5):
+            self.insert_citizen()
+        self.insert_citizen(self.get_bobby())
+
+        parser = etree.XMLParser(dtd_validation=True)
+        root = etree.fromstring(get_xml(self.citizen_query), parser) # raises exception on failure
