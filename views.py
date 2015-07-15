@@ -13,11 +13,6 @@ def get_xml(query):
     for row in rows:
         root.append(etree.Element(query.row, **{k:str(row[k]) for k in row}))
 
-    #root.append(etree.Element('rabs', **{'español':'hi'}))
-    out = etree.tostring(root, pretty_print=True, encoding='utf-8')
-    p = etree.XMLParser(dtd_validation=False)
-    tst = etree.fromstring(out, p)
-
     # can get actual field types by inspecting cursor.description,
     # but these (I think) depend on the database back-end
     # so I decided it was too hard to be smart here,
