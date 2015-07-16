@@ -1,0 +1,90 @@
+<!doctype html>{% load staticfiles %}
+<html>
+<head>
+<meta charset="utf-8">
+<title>queries</title>
+<style>
+* {
+	margin: 0;
+	padding: 0;
+}
+body {
+	padding: 2em;
+	background: #000;
+	color: #fff;
+	font-family: sans-serif;
+}
+div#foot {
+    margin-top: 2em;
+    font-size: 0.8em;
+    font-style: italic;
+    text-align: center;
+    color: #444;
+}
+div#foot p {
+    margin-bottom: 1em;
+}
+div#foot a {
+    color: #333;
+}
+div#foot a:hover {
+    color: #444;
+}
+div#wrapper {
+	width: 70%;
+	max-width: 700px;
+	margin: 0 auto;
+}
+h1 {
+    margin-bottom: 1em;
+}
+ul#queries {
+    padding: 1em 0;
+    list-style-type: none;
+}
+ul#queries li {
+    padding: 1em;
+}
+ul#queries li:hover {
+    background-color: #333;
+}
+span.key {
+    font-weight: bold;
+}
+span.get {
+    float: right;
+}
+span.get a {
+    margin-left: 1em;
+    color: #fff;
+    text-decoration: underline;
+}
+span.sql {
+    display: block;
+    font-family: monospace;
+}
+</style>
+<link rel="icon" href="{% static 'dump/favicon.png' %}">
+</head>
+<body>
+<div id="wrapper">
+<h1>queries</h1>
+{% spaceless %}
+<ul id="queries">
+{% for query in queries %}
+    <li>
+        <span class="key">{{ query.key }}</span>
+        <span class="get">{% for name, accept in dumpers %}
+            <a href="{% url 'query' query.key %}?accept={{ accept }}">{{ name }}</a>
+        {% endfor %}</span>
+        <span class="sql">{{ query.sql }}</span>
+    </li>
+{% endfor %}
+</ul>
+{% endspaceless %}
+</div>
+<div id="foot">
+<p><a href="mailto:u4669875@anu.edu.au">complain here</a></p>
+</div>
+</body>
+</html>

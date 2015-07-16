@@ -2,6 +2,7 @@ import json
 from django.http import HttpResponse, Http404
 from django.conf import settings
 from django.shortcuts import get_object_or_404
+from django.template import loader
 from lxml import etree
 from .models import Query
 
@@ -51,7 +52,20 @@ def get_query_json(query):
     return json.dumps(rows, indent=2)
 
 def get_queries_html():
-    return ','.join(q.key for q in Query.objects.all()) # TODO pretty pls
+    def dumper_name(media):
+        fst = media[0] # this always exists because we never make a Dumper to accept nothing
+        typ, sub = fst.split('/')
+        if typ == '*':
+            return fst # */*
+        if sub == '*':
+            return typ
+        return sub
+
+    tpl = loader.get_template('dump/index.html')
+    return tpl.render({
+        'queries' : Query.objects.all(),
+        'dumpers' : [(dumper_name(a), a[0]) for a in DUMPER.dumpers if DUMPER.dumpers[a][0]],
+    })
 
 class Dumper():
     """Output query results or queries list, in various formats."""
@@ -80,8 +94,8 @@ class Dumper():
 
 DUMPER = Dumper({
     ('application/xml', 'text/xml') : (get_query_xml, None),
-    ('application/json')            : (get_query_json, None),
-    ('text/html')                   : (None, get_queries_html),
+    ('application/json', )          : (get_query_json, None),
+    ('text/html', )                 : (None, get_queries_html),
 })
 
 def get_media_ranges(request):
