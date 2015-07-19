@@ -61,7 +61,7 @@ def get_queries_html():
             return typ
         return sub
 
-    tpl = loader.get_template('dump/index.html')
+    tpl = loader.get_template('sqldump/index.html')
     return tpl.render({
         'queries' : Query.objects.all(),
         'dumpers' : [(dumper_name(a), a[0]) for a in DUMPER.dumpers if DUMPER.dumpers[a][0]],

@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
 from django.db import connections
 from django.db import models
-from dump.models import Query
+from .models import Query
 from .settings import TEST_DB_CON
 from .views import get_query_xml, get_query_json
 from .models import Query
@@ -45,7 +45,7 @@ class ViewsTests(TestCase):
 
 class ValidationTests(TestCase):
     """
-    Creates Citizen model and some Query objects to query the dump_citizen table,
+    Creates Citizen model and some Query objects to query the sqldump_citizen table,
     then does various tests...
     """
     @classmethod
@@ -74,7 +74,7 @@ class ValidationTests(TestCase):
         # this query gets used enough to make it worth saving here...
         cls.citizen_query = Query(
             key  = 'citizens',
-            sql  = 'SELECT * FROM dump_citizen',
+            sql  = 'SELECT * FROM sqldump_citizen',
             root = 'citizens',
             row  = 'citizen'
         )
