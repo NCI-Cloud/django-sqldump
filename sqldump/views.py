@@ -5,6 +5,9 @@ from django.shortcuts import get_object_or_404
 from django.template import loader
 from lxml import etree
 from .models import Query
+from pygments import highlight
+from pygments.lexers.sql import SqlLexer
+from pygments.formatters import HtmlFormatter
 
 class HttpResponseNotAcceptable(HttpResponse):
     status_code = 406
@@ -61,10 +64,18 @@ def get_queries_html():
             return typ
         return sub
 
+    lexer = SqlLexer()
+    formatter = HtmlFormatter(style='monokai')
+    formatter.style.background_color = ''
+    queries = Query.objects.all()
+    for q in queries:
+        q.highlight = highlight(q.sql, lexer, formatter)
+
     tpl = loader.get_template('sqldump/index.html')
     return tpl.render({
-        'queries' : Query.objects.all(),
+        'queries' : queries,
         'dumpers' : [(dumper_name(a), a[0]) for a in DUMPER.dumpers if DUMPER.dumpers[a][0]],
+        'highlight' : formatter.get_style_defs('.highlight'),
     })
 
 class Dumper():

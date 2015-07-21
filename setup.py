@@ -14,5 +14,6 @@ setup(
     install_requires = [
         'django >=1.8.3',
         'lxml >=3.4.4',
+        'pygments >=2.0.2',
     ],
 )
