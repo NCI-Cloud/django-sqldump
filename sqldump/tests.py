@@ -20,7 +20,7 @@ class ViewsTests(TestCase):
         ).save()
 
     def test_404(self):
-        response = Client().get(reverse('query', args=(None,)))
+        response = Client().get(reverse('sqldump:query', args=(None,)))
         self.assertEqual(response.status_code, 404, 'should hit 404 for invalid query key')
 
     def test_accepts(self):
@@ -29,18 +29,18 @@ class ViewsTests(TestCase):
 
         # test sending single content type in http header
         c = Client(HTTP_ACCEPT='{content_type}'.format(content_type=ct))
-        response = c.get(reverse('query', args=(self.qkey,)))
+        response = c.get(reverse('sqldump:query', args=(self.qkey,)))
         self.assertTrue(response.has_header('content-type'), msg='http response needs content-type')
         self.assertEqual(response['content-type'], ct, msg='should receive content-type "{0}" when requesting it'.format(ct))
 
         # test sending multiple content types
         c = Client(HTTP_ACCEPT='{other_type}; q=0.2, {content_type}'.format(content_type=ct, other_type=cu))
-        response = c.get(reverse('query', args=(self.qkey,)))
+        response = c.get(reverse('sqldump:query', args=(self.qkey,)))
         self.assertEqual(response['content-type'], ct, msg='should receive content-type "{0}" when requesting it with higher precedence'.format(ct))
 
         # test overriding with query parameter
         c = Client(HTTP_ACCEPT=cu)
-        response = c.get(reverse('query', args=(self.qkey,)), {'accept':ct})
+        response = c.get(reverse('sqldump:query', args=(self.qkey,)), {'accept':ct})
         self.assertEqual(response['content-type'], ct, msg='should receive content-type "{0}" when passing in url'.format(ct))
 
 class ValidationTests(TestCase):

@@ -71,7 +71,7 @@ span.get a {
     <li>
         <span class="key">{{ query.key }}</span>
         <span class="get">{% for name, accept in dumpers %}
-            <a href="{% url 'query' query.key %}?accept={{ accept }}">{{ name }}</a>
+            <a href="{% url 'sqldump:query' query.key %}?accept={{ accept }}">{{ name }}</a>
         {% endfor %}</span>
         {{ query.highlight|safe }}
     </li>

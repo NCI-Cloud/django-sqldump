@@ -152,8 +152,8 @@ def get_media_ranges(request):
     # now return parameterless media-ranges (potentially includes duplicates)
     return [param_free(mr) for mr in mrs]
 
-def query(request, query_key):
-    q = get_object_or_404(Query, pk=query_key)
+def query(request, key):
+    q = get_object_or_404(Query, pk=key)
     return DUMPER.query(get_media_ranges(request), q)
 
 def index(request):
