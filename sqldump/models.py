@@ -29,3 +29,11 @@ class Query(models.Model):
             cursor.execute(self.sql)
             self.cols = [col[0] for col in cursor.description]
             return [{col:val for (col, val) in zip(self.cols, row)} for row in cursor.fetchall()]
+
+    def restrict(self, condition):
+        """Apply `condition` to this query.
+
+        This is a very fragile implementation, but hopefully that's excusable because this
+        code will be replaced by our restful reporting api.
+        """
+        self.sql += ' WHERE '+condition

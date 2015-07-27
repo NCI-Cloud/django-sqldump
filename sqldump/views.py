@@ -152,8 +152,10 @@ def get_media_ranges(request):
     # now return parameterless media-ranges (potentially includes duplicates)
     return [param_free(mr) for mr in mrs]
 
-def query(request, key):
+def query(request, key, uuid=None):
     q = get_object_or_404(Query, pk=key)
+    if uuid:
+        q.restrict("uuid='{}'".format(uuid)) # url regex ensures this is safe
     return DUMPER.query(get_media_ranges(request), q)
 
 def index(request):
