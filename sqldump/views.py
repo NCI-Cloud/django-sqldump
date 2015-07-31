@@ -9,6 +9,8 @@ from pygments import highlight
 from pygments.lexers.sql import SqlLexer
 from pygments.formatters import HtmlFormatter
 
+import datetime
+
 class HttpResponseNotAcceptable(HttpResponse):
     status_code = 406
 
@@ -16,6 +18,12 @@ def get_query_etree(query):
     rows = query.get()
     root = etree.Element(query.root)
     for row in rows:
+        # this is a hack to output iso8601, so js Date.parse understands
+        for k in row:
+            if hasattr(row[k], 'isoformat'):
+                if type(row[k]) == datetime.datetime:
+                    row[k] = row[k].replace(tzinfo=datetime.timezone.utc) # hackity hack
+                row[k] = row[k].isoformat()
         root.append(etree.Element(query.row, **{k:str(row[k]) for k in row}))
     return root
 
