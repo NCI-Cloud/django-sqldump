@@ -27,8 +27,12 @@ class Query(models.Model):
         """Return [{col1:val1, col2:val2, ...} ...]."""
         with connections[Query.db_con].cursor() as cursor:
             cursor.execute(self.sql)
-            self.cols = [col[0] for col in cursor.description]
-            return [{col:val for (col, val) in zip(self.cols, row)} for row in cursor.fetchall()]
+            rows = cursor.fetchall()
+            if rows:
+                self.cols = [col[0] for col in cursor.description]
+                return [{col:val for (col, val) in zip(self.cols, row)} for row in rows]
+            else:
+                return [] # awkward code for "CALL" queries, which give description=None
 
     def restrict(self, condition):
         """Apply `condition` to this query.
